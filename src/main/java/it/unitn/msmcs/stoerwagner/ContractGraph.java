@@ -1,4 +1,4 @@
-package it.unitn.msmcs.connectivity;
+package it.unitn.msmcs.stoerwagner;
 
 import java.io.IOException;
 import java.util.ArrayList;

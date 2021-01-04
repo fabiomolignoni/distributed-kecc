@@ -1,4 +1,4 @@
-package it.unitn.msmcs.connectivity;
+package it.unitn.msmcs.stoerwagner;
 
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;

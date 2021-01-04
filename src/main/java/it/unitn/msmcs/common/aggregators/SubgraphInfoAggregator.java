@@ -18,9 +18,7 @@ public class SubgraphInfoAggregator extends BasicAggregator<SubgraphInfoMapWrita
                 SubgraphInfoWritable received = value.get(key);
                 SubgraphInfoWritable stored = agg.get(key);
 
-                if (received.getTightValue().compareTo(stored.getTightValue()) > 0
-                        || (received.getTightValue().equals(stored.getTightValue())
-                                && stored.getId().equals(new IntWritable(-1)))) {
+                if (received.getTightValue().compareTo(stored.getTightValue()) > 0) {
                     stored.setId(new IntWritable(received.getId().get()));
                     stored.setTightValue(received.getTightValue());
                 }

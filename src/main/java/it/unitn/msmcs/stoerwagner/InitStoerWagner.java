@@ -1,12 +1,9 @@
-package it.unitn.msmcs.connectivity;
-
-import java.util.Random;
+package it.unitn.msmcs.stoerwagner;
 
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.DoubleWritable;
 
 import it.unitn.msmcs.common.messages.ConnectivityMessage;
 import it.unitn.msmcs.common.writables.ConnectivityStateWritable;
@@ -21,13 +18,11 @@ public class InitStoerWagner
         ConnectivityStateWritable state = vertex.getValue();
 
         boolean isActive = state.getNumberActiveEdges().get() > 0;
-        double startProbability = ((DoubleWritable) getAggregatedValue(ConnectivityMaster.START_PROBABILITY)).get();
-
         if (isActive)
             aggregate(ConnectivityMaster.REMAINING, new IntWritable(1));
 
         state.setMergeTarget(new IntWritable(-1));
-        if (state.getSubgraph().equals(vertex.getId()) || new Random().nextDouble() <= startProbability) {
+        if (state.getSubgraph().equals(vertex.getId())) {
             state.setIsMerged(true);
             state.setIsLast(true);
             aggregate(ConnectivityMaster.CONTINUE_COMPUTATION, new BooleanWritable(isActive));
@@ -36,7 +31,5 @@ public class InitStoerWagner
             state.setIsMerged(false);
             state.setIsLast(false);
         }
-
-        state.setSubgraph(vertex.getId());
     }
 }

@@ -1,7 +1,4 @@
-package it.unitn.msmcs.connectivity;
-
-import java.util.HashMap;
-import java.util.HashSet;
+package it.unitn.msmcs.stoerwagner;
 
 import com.google.common.collect.Iterators;
 
@@ -39,6 +36,10 @@ public class StoerWagner
                 performMergeOrCut(vertex, messages);
             }
 
+            if (!state.isMerged().get()) {
+                aggregate(ConnectivityMaster.CONTINUE_COMPUTATION, new BooleanWritable(true));
+            }
+
         } else if (round == 1 && !state.isMerged().get()) {
             // Second round: unmerged nodes check who is the tightest.
             checkTightness(vertex, messages);
@@ -56,7 +57,7 @@ public class StoerWagner
      * @param vertex
      */
     public void contactUnmergedNodes(Vertex<IntWritable, ConnectivityStateWritable, EdgeStateWritable> vertex) {
-        ConnectivityMessage m = new ConnectivityMessage(vertex.getId(), vertex.getValue().getSubgraph());
+        ConnectivityMessage m = new ConnectivityMessage(vertex.getId());
         sendMessageToAllActiveEdges(vertex, m);
     }
 
@@ -75,8 +76,6 @@ public class StoerWagner
                         if (e.getValue().isActive().get()) {
                             state.decreaseNumberActiveEdges();
                         }
-                        // System.out.println(vertex.getId() + " will cut with " +
-                        // e.getTargetVertexId());
                         e.getValue().setIsActive(false);
                         e.getValue().setValue(k);
                     }
@@ -93,28 +92,17 @@ public class StoerWagner
      */
     public void checkTightness(Vertex<IntWritable, ConnectivityStateWritable, EdgeStateWritable> vertex,
             Iterable<ConnectivityMessage> messages) {
-
+        // Second round: not merged nodes decide who is the next merged
         ConnectivityStateWritable state = vertex.getValue();
-        HashMap<Integer, Integer> tightness = new HashMap<Integer, Integer>();
-        for (ConnectivityMessage m : messages) {
-            // count messages received
-            if (!tightness.containsKey(m.getContent().get())) {
-                tightness.put(m.getContent().get(), 0);
-            }
+        int nMessages = Iterators.size(messages.iterator());
+        if (!state.isMerged().get()) {
 
-            tightness.put(m.getContent().get(), tightness.get(m.getContent().get()) + 1);
+            // Aggregate for most tightly connected vertex
+            SubgraphInfoMapWritable m = new SubgraphInfoMapWritable();
+            m.put(state.getSubgraph(), new SubgraphInfoWritable(vertex.getId(), nMessages));
+            aggregate(ConnectivityMaster.SUBGRAPH_INFO, m);
+
         }
-
-        // propose as tightest
-        int myId = state.isMerged().get() ? -1 : vertex.getId().get();
-        SubgraphInfoMapWritable m = new SubgraphInfoMapWritable();
-        for (int k : tightness.keySet()) {
-            if (k != state.getSubgraph().get()) {
-                m.put(new IntWritable(k), new SubgraphInfoWritable(new IntWritable(myId), tightness.get(k)));
-            }
-        }
-        aggregate(ConnectivityMaster.SUBGRAPH_INFO, m);
-
     }
 
     private void computeNewLast(Vertex<IntWritable, ConnectivityStateWritable, EdgeStateWritable> vertex) {
@@ -124,8 +112,7 @@ public class StoerWagner
         SubgraphInfoWritable subgraphInfo = (SubgraphInfoWritable) mapTightly.get(state.getSubgraph());
         IntWritable k = getAggregatedValue(ConnectivityMaster.K);
 
-        if (state.isLast().get() && subgraphInfo != null && subgraphInfo.getId().get() != -1
-                && subgraphInfo.getTightValue().compareTo(k) > 0) {
+        if (state.isLast().get() && subgraphInfo != null && subgraphInfo.getTightValue().compareTo(k) > 0) {
             // Communicate to last node with whom it has to merge
             if (state.getMergeTarget().get() == -1) {
                 sendMessage(subgraphInfo.getId(),
@@ -158,15 +145,10 @@ public class StoerWagner
             state.setIsLast(false);
 
         } else {
-            for (IntWritable key : mapTightly.keySet()) {
-                if (mapTightly.get(key).getId().equals(vertex.getId())) {
-                    // If I am the chosen one I merge
-                    state.setIsMerged(true);
-                    state.setIsLast(true);
-                    state.setSubgraph(new IntWritable(key.get()));
-                    aggregate(ConnectivityMaster.CONTINUE_COMPUTATION, new BooleanWritable(true));
-                    break;
-                }
+            if (subgraphInfo.getId().equals(vertex.getId())) {
+                // If I am the chosen one I merge
+                state.setIsMerged(true);
+                state.setIsLast(true);
             }
         }
     }
