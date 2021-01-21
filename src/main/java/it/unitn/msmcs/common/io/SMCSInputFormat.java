@@ -9,11 +9,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 public class SMCSInputFormat extends TextEdgeInputFormat<IntWritable, IntWritable> {
     /** Splitter for endpoints */
-    private static final Pattern SEPARATOR = Pattern.compile(",");
 
     @Override
     public EdgeReader<IntWritable, IntWritable> createEdgeReader(InputSplit split, TaskAttemptContext context)
@@ -24,7 +22,7 @@ public class SMCSInputFormat extends TextEdgeInputFormat<IntWritable, IntWritabl
     public class ConnectivityEdgeReader extends TextEdgeReaderFromEachLineProcessed<ArrayList<Integer>> {
         @Override
         protected ArrayList<Integer> preprocessLine(Text line) throws IOException {
-            String[] tokens = SEPARATOR.split(line.toString());
+            String[] tokens = line.toString().split("\\D+");
             ArrayList<Integer> l = new ArrayList<Integer>();
             for (String t : tokens) {
                 l.add(Integer.parseInt(t));

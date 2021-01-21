@@ -34,6 +34,10 @@ public class ConnectivityMessage implements Writable {
         return content;
     }
 
+    public void setContent(IntWritable content) {
+        this.content = content;
+    }
+
     public void write(DataOutput out) throws IOException {
         sender.write(out);
         content.write(out);

@@ -10,8 +10,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import it.unitn.msmcs.common.writables.EdgeStateWritable;
-
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -54,13 +52,15 @@ public class ConnectivityOutputFormat<I extends WritableComparable, V extends Wr
             StringBuffer sb = new StringBuffer();
 
             Iterator<Edge<I, E>> itr = vertex.getEdges().iterator();
+            int id = ((IntWritable) vertex.getId()).get();
+            boolean first = true;
             while (itr.hasNext()) {
                 Edge<I, E> e = itr.next();
-                EdgeStateWritable edge = (EdgeStateWritable) e.getValue();
-                IntWritable target = (IntWritable) e.getTargetVertexId();
-                sb.append(vertex.getId().toString() + "," + target.toString() + "," + edge.getValue());
-                if (itr.hasNext()) {
-                    sb.append("\n");
+                int target = ((IntWritable) e.getTargetVertexId()).get();
+                if (id < target) {
+                    String start = first ? "" : "\n";
+                    sb.append(start + id + "," + target);
+                    first = false;
                 }
             }
 
