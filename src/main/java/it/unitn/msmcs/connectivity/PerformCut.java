@@ -1,7 +1,6 @@
 package it.unitn.msmcs.connectivity;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.giraph.edge.Edge;
@@ -33,7 +32,6 @@ public class PerformCut extends
                     for (Edge<IntWritable, ConnectivityEdgeWritable> e : vertex.getEdges()) {
                         removeEdgesRequest(new IntWritable(e.getTargetVertexId().get()), vertex.getId());
                     }
-                    vertex.setEdges(new ArrayList<Edge<IntWritable, ConnectivityEdgeWritable>>());
                     removeVertexRequest(vertex.getId());
                 } catch (IOException e1) {
                     e1.printStackTrace();

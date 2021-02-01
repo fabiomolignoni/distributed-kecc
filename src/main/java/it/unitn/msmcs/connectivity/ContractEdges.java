@@ -1,6 +1,5 @@
 package it.unitn.msmcs.connectivity;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -81,16 +80,8 @@ public class ContractEdges extends
             } else {
                 for (MutableEdge<IntWritable, ConnectivityEdgeWritable> e : vertex.getMutableEdges()) {
                     if (changes.containsKey(e.getTargetVertexId().get())) {
-                        if (e.getValue().isReal()) {
-                            e.getValue().setIsActive(false);
-                            e.getValue().setValue(Integer.MAX_VALUE);
-                        } else {
-                            try {
-                                removeEdgesRequest(vertex.getId(), new IntWritable(e.getTargetVertexId().get()));
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                            }
-                        }
+                        e.getValue().setIsActive(false);
+                        e.getValue().setValue(Integer.MAX_VALUE);
                     }
                 }
             }
