@@ -1,4 +1,4 @@
-# K-ECC Decomposition
+# K-ECC Community Search
 ## Compile and run
 One possibility is to run ```mvn package```, it may bring some errors at run time depending on the Giraph-Hadoop version you're using. A safe (but dirty) alternative is the following. 
 Upload the graph:
@@ -26,9 +26,9 @@ Remove old Giraph files (if it is not the first run)
 $HADOOP_HOME/bin/hdfs dfs -rm /user/giraph/aggregatorValues_0
 $HADOOP_HOME/bin/hdfs dfs -rm -r /user/giraph/output/connectivity
 ```
-Run the project
+Run the project. Input vertices are separated by a "-".
 ```
-$HADOOP_HOME/bin/hadoop jar  msmcs.jar org.apache.giraph.GiraphRunner it.unitn.msmcs.kecc.InitComputation -op /user/giraph/output/connectivity -vof it.unitn.msmcs.common.io.ConnectivityOutputFormat   -mc it.unitn.msmcs.kecc.ConnectivityMaster -aw org.apache.giraph.aggregators.TextAggregatorWriter -ca giraph.textAggregatorWriter.frequency=1  -eip /user/giraph/input/graph.txt -eif it.unitn.msmcs.common.io.ConnectivityInputFormat -w 1 -ca giraph.SplitMasterWorker=false,giraph.logLevel=error,giraph.useSuperstepCounters=false,input.k=3
+$HADOOP_HOME/bin/hadoop jar  msmcs.jar org.apache.giraph.GiraphRunner it.unitn.msmcs.kecc.InitComputation -op /user/giraph/output/connectivity -vof it.unitn.msmcs.common.io.ConnectivityOutputFormat   -mc it.unitn.msmcs.kecc.ConnectivityMaster -aw org.apache.giraph.aggregators.TextAggregatorWriter -ca giraph.textAggregatorWriter.frequency=1  -eip /user/giraph/input/graph.txt -eif it.unitn.msmcs.common.io.ConnectivityInputFormat -w 1 -ca giraph.SplitMasterWorker=false,giraph.logLevel=error,giraph.useSuperstepCounters=false,input.vertices=1-8
 ```
 Check the results
 ```
