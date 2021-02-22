@@ -8,16 +8,16 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import it.unitn.msmcs.common.writables.ConnectivityEdgeWritable;
+import it.unitn.msmcs.common.writables.EdgeWritable;
 
 import java.io.IOException;
 
-public class ConnectivityEdgeInputFormat extends TextEdgeInputFormat<IntWritable, ConnectivityEdgeWritable> {
+public class ConnectivityInputFormat extends TextEdgeInputFormat<IntWritable, EdgeWritable> {
     /** Splitter for endpoints */
 
     @Override
-    public EdgeReader<IntWritable, ConnectivityEdgeWritable> createEdgeReader(InputSplit split,
-            TaskAttemptContext context) throws IOException {
+    public EdgeReader<IntWritable, EdgeWritable> createEdgeReader(InputSplit split, TaskAttemptContext context)
+            throws IOException {
         return new ConnectivityEdgeReader();
     }
 
@@ -39,8 +39,8 @@ public class ConnectivityEdgeInputFormat extends TextEdgeInputFormat<IntWritable
         }
 
         @Override
-        protected ConnectivityEdgeWritable getValue(IntPair endpoints) throws IOException {
-            return new ConnectivityEdgeWritable(1, true, true);
+        protected EdgeWritable getValue(IntPair endpoints) throws IOException {
+            return new EdgeWritable(1, true, true);
         }
     }
 }
