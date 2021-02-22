@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.apache.giraph.aggregators.BooleanOrAggregator;
+import org.apache.giraph.aggregators.IntMinAggregator;
 import org.apache.giraph.aggregators.IntSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.BooleanWritable;
@@ -16,6 +17,8 @@ public class ConnectivityMaster extends DefaultMasterCompute {
     public static String K = "K"; // aggregator for k value of k-ECC
     public static String CUT = "CUT"; // aggregator true if graph needs a cut
     public static String FORCED = "FORCED"; // aggregator true if graph needs a cut
+    public static String MINID = "MINID"; // aggregator true if graph needs a cut
+    public static String STOP = "STOP"; // aggregator true if graph needs a cut
 
     private int nIterations = 1; // number of iterations to perform
     private int iterationsDone = 0; // number of iterations already done
@@ -68,14 +71,15 @@ public class ConnectivityMaster extends DefaultMasterCompute {
 
         // Read user inputs
         nIterations = Integer.parseInt(getConf().get("input.iterations"));
-        k = Integer.parseInt(getConf().get("input.k"));
 
         // Initialize aggregators
         registerAggregator(ROUND, IntSumAggregator.class);
         registerAggregator(CONTINUE, BooleanOrAggregator.class);
+        registerAggregator(STOP, BooleanOrAggregator.class);
         registerAggregator(CUT, BooleanOrAggregator.class);
         registerAggregator(FORCED, BooleanOrAggregator.class);
         registerPersistentAggregator(K, IntSumAggregator.class);
+        registerPersistentAggregator(MINID, IntMinAggregator.class);
     }
 
     /**
@@ -198,15 +202,26 @@ public class ConnectivityMaster extends DefaultMasterCompute {
     }
 
     private void restoreGraph() {
-        if (round < 2) {
+        if (round < 3) {
             setComputation(RestoreGraph.class);
             round++;
         } else {
+            BooleanWritable cont = getAggregatedValue(CONTINUE);
             iterationsDone++;
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
-            System.out.println("========= END ITERATION " + iterationsDone + " - " + dtf.format(LocalDateTime.now()));
-            if (iterationsDone < nIterations) {
+            System.out.println("========= K = " + k + " - END ITERATION " + iterationsDone + " - "
+                    + dtf.format(LocalDateTime.now()));
+            setAggregatedValue(MINID, new IntWritable(Integer.MAX_VALUE));
+            if (iterationsDone < nIterations && cont.get()) {
                 round = 0;
+                setAggregatedValue(ROUND, new IntWritable(round));
+                phase = Phase.PERFORM_CUTS;
+                performCuts();
+            } else if (iterationsDone == nIterations && cont.get()) {
+                round = 0;
+                k += 1;
+                iterationsDone = 0;
+                setAggregatedValue(K, new IntWritable(k));
                 setAggregatedValue(ROUND, new IntWritable(round));
                 phase = Phase.PERFORM_CUTS;
                 performCuts();
